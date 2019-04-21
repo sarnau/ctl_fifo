@@ -38,7 +38,7 @@ size_t ctl_fifo_element_size(CTL_FIFO_t *fifo) {
   return fifo->elementSize;
 }
 
-int ctl_fifo_add(CTL_FIFO_t *fifo, const void *element) {
+bool ctl_fifo_add(CTL_FIFO_t *fifo, const void *element) {
   int enabled = ctl_global_interrupts_disable();
 
   size_t wp = fifo->writePos + 1;
@@ -47,23 +47,23 @@ int ctl_fifo_add(CTL_FIFO_t *fifo, const void *element) {
   if (wp == fifo->readPos) { // fifo full?
     if (enabled)
       ctl_global_interrupts_enable();
-    return 0; // do not accept this element
+    return false; // do not accept this element
   } else {
     memcpy(fifo->writePos * fifo->elementSize + (uint8_t *)fifo->buffer, element, fifo->elementSize); // copy the element into the buffer
     fifo->writePos = wp;
     if (enabled)
       ctl_global_interrupts_enable();
     ctl_events_set_clear(fifo->eventPtr, fifo->event, 0); // notify tasks about it
-    return 1;
+    return true;
   }
 }
 
-int ctl_fifo_remove(CTL_FIFO_t *fifo) {
+bool ctl_fifo_remove(CTL_FIFO_t *fifo) {
   int enabled = ctl_global_interrupts_disable();
   if (fifo->readPos == fifo->writePos) { // fifo empty?
     if (enabled)
       ctl_global_interrupts_enable();
-    return 0; // nothing to remove
+    return false; // nothing to remove
   }
   size_t rp = fifo->readPos + 1;
   if (rp >= fifo->elementCount)
@@ -72,7 +72,7 @@ int ctl_fifo_remove(CTL_FIFO_t *fifo) {
   ctl_events_set_clear(fifo->eventPtr, 0, fifo->event); // notify tasks about it
   if (enabled)
     ctl_global_interrupts_enable();
-  return 1;
+  return true;
 }
 
 const void *ctl_fifo_peek(CTL_FIFO_t *fifo) {

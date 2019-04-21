@@ -14,7 +14,7 @@ static CTL_FIFO_t gFifo;
 void task_sender(void *p) {
   char cc = '0';
   while (1) {
-    debug_printf("S %6d [%c]\n", ctl_current_time, cc);
+    debug_printf("S %6d [%c]\n", ctl_get_current_time(), cc);
     ctl_fifo_add(&gFifo, &cc);
     cc++;
     if(cc > '9') cc = '0';
@@ -26,10 +26,10 @@ void task_receiver(void *p) {
   while (1) {
     unsigned ret = ctl_events_wait(CTL_EVENT_WAIT_ANY_EVENTS, &gEvent, 1, CTL_TIMEOUT_DELAY, 10);
     if(!ret) {
-      debug_printf("R %6d Timeout\n", ctl_current_time);
+      debug_printf("R %6d Timeout\n", ctl_get_current_time());
     } else {
       const uint8_t *ptr = (const uint8_t *)ctl_fifo_peek(&gFifo);
-      debug_printf("R %6d %d [%c]\n", ctl_current_time, ret, ptr[0]);
+      debug_printf("R %6d %d [%c]\n", ctl_get_current_time(), ret, ptr[0]);
       ctl_fifo_remove(&gFifo);
     }
   }
